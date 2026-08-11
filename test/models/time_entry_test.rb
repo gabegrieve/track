@@ -15,8 +15,9 @@ class TimeEntryTest < ActiveSupport::TestCase
 
   test "prevents changes to invoiced entries" do
     entry = TimeEntry.create!(project: @project, description: "Finished task", started_at: 2.hours.ago, ended_at: 1.hour.ago, duration_minutes: 60, hourly_rate_cents: @project.hourly_rate_cents, billing_status: :pending)
+    budget = @project.service_budgets.create!(name: "Web design", budget_hours: 12)
 
-    entry.description = "Changed task"
+    entry.service_budget = budget
     assert_not entry.valid?
     assert_includes entry.errors.full_messages, "Invoiced entries are locked"
   end
@@ -27,5 +28,14 @@ class TimeEntryTest < ActiveSupport::TestCase
     entry.update!(started_at: Time.zone.parse("2026-08-10 09:15"), ended_at: Time.zone.parse("2026-08-10 11:00"))
 
     assert_equal 105, entry.duration_minutes
+  end
+
+  test "requires the service budget to belong to the project" do
+    other_project = Project.create!(name: "Brand", client_name: "Acme", hourly_rate_cents: 15_000)
+    budget = other_project.service_budgets.create!(name: "Asset design", budget_hours: 6)
+    entry = TimeEntry.new(project: @project, service_budget: budget, description: "Finished task", started_at: 3.hours.ago, ended_at: 2.hours.ago, hourly_rate_cents: @project.hourly_rate_cents)
+
+    assert_not entry.valid?
+    assert_includes entry.errors[:service_budget], "must belong to the selected project"
   end
 end

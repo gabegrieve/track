@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_11_084456) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_11_100002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,6 +23,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_11_084456) do
     t.decimal "gst_rate", precision: 5, scale: 2, default: "10.0", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "invoice_budget_summaries", force: :cascade do |t|
+    t.bigint "invoice_id", null: false
+    t.bigint "service_budget_id", null: false
+    t.string "name", null: false
+    t.string "cadence", null: false
+    t.date "period_start"
+    t.integer "budget_minutes", null: false
+    t.integer "used_minutes", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["invoice_id", "service_budget_id", "period_start"], name: "index_invoice_budget_summaries_on_snapshot", unique: true
+    t.index ["invoice_id"], name: "index_invoice_budget_summaries_on_invoice_id"
+    t.index ["service_budget_id"], name: "index_invoice_budget_summaries_on_service_budget_id"
   end
 
   create_table "invoice_lines", force: :cascade do |t|
@@ -75,6 +90,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_11_084456) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "service_budgets", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.string "name", null: false
+    t.integer "budget_minutes", null: false
+    t.string "cadence", default: "project", null: false
+    t.boolean "archived", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "archived", "name"], name: "index_service_budgets_on_project_id_and_archived_and_name"
+    t.index ["project_id"], name: "index_service_budgets_on_project_id"
+  end
+
   create_table "time_entries", force: :cascade do |t|
     t.bigint "project_id", null: false
     t.string "description", null: false
@@ -85,12 +112,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_11_084456) do
     t.string "billing_status", default: "uninvoiced", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "service_budget_id"
     t.index ["billing_status"], name: "index_time_entries_on_billing_status"
     t.index ["project_id"], name: "index_time_entries_on_project_id"
+    t.index ["service_budget_id"], name: "index_time_entries_on_service_budget_id"
   end
 
+  add_foreign_key "invoice_budget_summaries", "invoices"
+  add_foreign_key "invoice_budget_summaries", "service_budgets"
   add_foreign_key "invoice_lines", "invoices"
   add_foreign_key "invoice_lines", "time_entries"
   add_foreign_key "invoices", "projects"
+  add_foreign_key "service_budgets", "projects"
   add_foreign_key "time_entries", "projects"
+  add_foreign_key "time_entries", "service_budgets"
 end

@@ -19,6 +19,12 @@
       <%= form.label :project_id, "Project", class: "mb-1.5 block text-xs text-zinc-600" %>
       <%= form.collection_select :project_id, Project.active.order(:name), :id, :name, {}, required: true, class: "h-10 rounded-md border-zinc-300 px-3" %>
     </div>
+    <% if @service_budgets.any? %>
+      <div class="mb-4">
+        <%= form.label :service_budget_id, "Category", class: "mb-1.5 block text-xs text-zinc-600" %>
+        <%= form.collection_select :service_budget_id, @service_budgets, :id, :name, { include_blank: "Uncategorised" }, class: "h-10 rounded-md border-zinc-300 px-3" %>
+      </div>
+    <% end %>
     <div class="mb-5 grid gap-4 sm:grid-cols-2">
       <div>
         <%= form.label :started_at, "Start time", class: "mb-1.5 block text-xs text-zinc-600" %>

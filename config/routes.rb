@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   root "dashboard#index"
 
-  resources :projects, except: :show
+  resources :projects, except: :show do
+    resources :service_budgets, only: %i[create update]
+  end
   resources :time_entries, only: %i[create edit update destroy] do
     collection do
       post :start

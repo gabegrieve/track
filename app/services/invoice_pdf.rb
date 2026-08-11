@@ -47,7 +47,9 @@ class InvoicePdf
         pdf.move_down 8
         pdf.text "Total  #{money(@invoice.total_cents)}", align: :right, style: :bold, size: 13
       end
-      pdf.move_down 42
+      pdf.move_down 36
+      render_budget_summaries(pdf)
+      pdf.move_down 28
       pdf.text "PAYMENT INSTRUCTIONS", style: :bold, size: 8
       pdf.move_down 4
       pdf.text @invoice.payment_instructions.to_s, size: 10
@@ -66,5 +68,24 @@ class InvoicePdf
 
   def format_date(date)
     date&.to_date&.strftime("%-d %B %Y")
+  end
+
+  def render_budget_summaries(pdf)
+    return if @invoice.budget_summaries.empty?
+
+    pdf.start_new_page if pdf.cursor < 160
+    pdf.text "SERVICE BUDGET UTILISATION", style: :bold, size: 8
+    pdf.move_down 5
+    pdf.font_size 7
+    pdf.text "SERVICE                                  PERIOD               BUDGET       USED        REMAINING", style: :bold
+    pdf.stroke_horizontal_rule
+    pdf.move_down 4
+    @invoice.budget_summaries.each do |summary|
+      remaining = summary.remaining_minutes
+      remaining_text = remaining.negative? ? "Over #{duration(-remaining)}" : duration(remaining)
+      pdf.text "#{summary.name.to_s.truncate(38).ljust(41)}#{summary.period_label.ljust(20)}#{duration(summary.budget_minutes).rjust(10)}#{duration(summary.used_minutes).rjust(11)}#{remaining_text.rjust(14)}"
+      pdf.move_down 5
+    end
+    pdf.font_size 10
   end
 end

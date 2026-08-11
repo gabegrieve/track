@@ -1,9 +1,10 @@
 class TimeEntriesController < ApplicationController
   before_action :set_time_entry, only: %i[edit update destroy stop restart]
+  before_action :set_service_budgets, only: %i[edit update]
 
   def start
-    project = Project.active.find(params.require(:project_id))
-    entry = TimeEntry.new(project:, description: params.require(:description), started_at: Time.current, hourly_rate_cents: project.hourly_rate_cents)
+    project = Project.active.find(start_params[:project_id])
+    entry = TimeEntry.new(start_params.merge(project:, started_at: Time.current, hourly_rate_cents: project.hourly_rate_cents))
     entry.save!
     redirect_to root_path, notice: "Timer started."
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound => error
@@ -50,7 +51,7 @@ class TimeEntriesController < ApplicationController
 
   def restart
     project = @time_entry.project
-    entry = TimeEntry.new(project:, description: @time_entry.description, started_at: Time.current, hourly_rate_cents: project.hourly_rate_cents)
+    entry = TimeEntry.new(project:, service_budget: @time_entry.service_budget&.archived? ? nil : @time_entry.service_budget, description: @time_entry.description, started_at: Time.current, hourly_rate_cents: project.hourly_rate_cents)
     entry.save!
     redirect_to root_path, notice: "Timer started with the previous details."
   rescue ActiveRecord::RecordInvalid => error
@@ -63,11 +64,20 @@ class TimeEntriesController < ApplicationController
     @time_entry = TimeEntry.find(params[:id])
   end
 
+  def set_service_budgets
+    @service_budgets = @time_entry.project.service_budgets.active.order(:name)
+    @service_budgets = @service_budgets.or(@time_entry.project.service_budgets.where(id: @time_entry.service_budget_id)) if @time_entry.service_budget_id
+  end
+
   def manual_params
-    params.require(:time_entry).permit(:description, :project_id, :duration_minutes, :entry_date)
+    params.require(:time_entry).permit(:description, :project_id, :service_budget_id, :duration_minutes, :entry_date)
   end
 
   def edit_params
-    params.require(:time_entry).permit(:description, :project_id, :started_at, :ended_at)
+    params.require(:time_entry).permit(:description, :project_id, :service_budget_id, :started_at, :ended_at)
+  end
+
+  def start_params
+    params.permit(:description, :project_id, :service_budget_id)
   end
 end

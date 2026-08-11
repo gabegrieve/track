@@ -1,6 +1,7 @@
 class DashboardController < ApplicationController
   def index
     @projects = Project.active.order(:name)
+    @service_budgets = ServiceBudget.active.includes(:project).where(project: @projects).order("projects.name", :name)
     @running_entry = TimeEntry.find_by(ended_at: nil)
     @manual_entry = TimeEntry.new(started_at: Time.zone.now)
     @time_entries = filter_entries
@@ -9,7 +10,7 @@ class DashboardController < ApplicationController
   private
 
   def filter_entries
-    entries = TimeEntry.includes(:project).newest_first
+    entries = TimeEntry.includes(:project, :service_budget).newest_first
     case params[:range]
     when "week"
       entries.where(started_at: Time.current.beginning_of_week..Time.current.end_of_week)

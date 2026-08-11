@@ -1,5 +1,6 @@
 class TimeEntry < ApplicationRecord
   belongs_to :project
+  belongs_to :service_budget, optional: true
   has_one :invoice_line, dependent: :restrict_with_error
 
   enum :billing_status, { uninvoiced: "uninvoiced", pending: "pending", paid: "paid" }, default: :uninvoiced
@@ -12,6 +13,7 @@ class TimeEntry < ApplicationRecord
   validates :duration_minutes, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :only_one_running_timer, if: :running?
   validate :end_follows_start
+  validate :service_budget_matches_project
   validate :locked_entries_cannot_change, on: :update
 
   scope :completed, -> { where.not(ended_at: nil) }
@@ -43,7 +45,7 @@ class TimeEntry < ApplicationRecord
   end
 
   def locked_entries_cannot_change
-    return unless locked? && (will_save_change_to_description? || will_save_change_to_project_id? || will_save_change_to_duration_minutes? || will_save_change_to_started_at? || will_save_change_to_ended_at?)
+    return unless locked? && (will_save_change_to_description? || will_save_change_to_project_id? || will_save_change_to_service_budget_id? || will_save_change_to_duration_minutes? || will_save_change_to_started_at? || will_save_change_to_ended_at?)
 
     errors.add(:base, "Invoiced entries are locked")
   end
@@ -58,5 +60,11 @@ class TimeEntry < ApplicationRecord
     return if started_at.blank? || ended_at.blank? || ended_at < started_at
 
     self.duration_minutes = [(ended_at - started_at).fdiv(60).ceil, 1].max
+  end
+
+  def service_budget_matches_project
+    return if service_budget.blank? || service_budget.project_id == project_id
+
+    errors.add(:service_budget, "must belong to the selected project")
   end
 end

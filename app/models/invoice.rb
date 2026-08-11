@@ -1,6 +1,7 @@
 class Invoice < ApplicationRecord
   belongs_to :project
   has_many :invoice_lines, dependent: :destroy
+  has_many :invoice_budget_summaries, dependent: :destroy
   has_many :time_entries, through: :invoice_lines
 
   enum :status, { draft: "draft", issued: "issued", paid: "paid", voided: "voided" }, default: :draft
@@ -41,6 +42,7 @@ class Invoice < ApplicationRecord
       raise "Complete business settings before issuing an invoice" unless setting.ready_for_invoicing?
 
       assign_party_snapshots(setting)
+      snapshot_budget_summaries!
       self.number = self.class.next_number
       self.issued_at = Time.current
       self.status = :issued
@@ -81,6 +83,12 @@ class Invoice < ApplicationRecord
     format("INV-%04d", where.not(number: nil).count + 1)
   end
 
+  def budget_summaries
+    return invoice_budget_summaries.order(:cadence, :period_start, :name) unless draft?
+
+    live_budget_summaries
+  end
+
   private
 
   def period_is_ordered
@@ -98,5 +106,56 @@ class Invoice < ApplicationRecord
     self.client_name = project.client_name
     self.client_address = project.client_address
     self.gst_rate = setting.gst_rate
+  end
+
+  def snapshot_budget_summaries!
+    invoice_budget_summaries.destroy_all
+    live_budget_summaries.each do |summary|
+      invoice_budget_summaries.create!(
+        service_budget: summary.service_budget,
+        name: summary.name,
+        cadence: summary.cadence,
+        period_start: summary.period_start,
+        budget_minutes: summary.budget_minutes,
+        used_minutes: summary.used_minutes
+      )
+    end
+  end
+
+  def live_budget_summaries
+    project.service_budgets.active.order(:name).flat_map do |service_budget|
+      if service_budget.monthly?
+        invoice_months.map { |month| build_budget_summary(service_budget, month) }
+      else
+        [build_budget_summary(service_budget)]
+      end
+    end
+  end
+
+  def build_budget_summary(service_budget, month = nil)
+    range_start = month&.beginning_of_month
+    range_end = month ? [month.end_of_month, period_end].min : period_end
+    scope = service_budget.time_entries.completed.where(started_at: ..range_end.end_of_day)
+    scope = scope.where(started_at: range_start.beginning_of_day..) if range_start
+
+    InvoiceBudgetSummary.new(
+      service_budget:,
+      name: service_budget.name,
+      cadence: service_budget.cadence,
+      period_start: month,
+      budget_minutes: service_budget.budget_minutes,
+      used_minutes: scope.sum(:duration_minutes)
+    )
+  end
+
+  def invoice_months
+    months = []
+    month = period_start.beginning_of_month
+    last_month = period_end.beginning_of_month
+    while month <= last_month
+      months << month
+      month = month.next_month
+    end
+    months
   end
 end
