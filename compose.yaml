@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: track_development
+      POSTGRES_USER: track
+      POSTGRES_PASSWORD: track
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U track -d track_development"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    command: ./bin/rails server -b 0.0.0.0
+    environment:
+      RAILS_ENV: development
+      BUNDLE_WITHOUT: ""
+      DATABASE_URL: postgresql://track:track@db:5432/track_development
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/rails
+    depends_on:
+      db:
+        condition: service_healthy
+
+  css:
+    build: .
+    command: ["./bin/rails", "tailwindcss:watch[always]"]
+    environment:
+      RAILS_ENV: development
+      BUNDLE_WITHOUT: ""
+    volumes:
+      - .:/rails
+
+volumes:
+  postgres_data:

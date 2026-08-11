@@ -1,0 +1,1745 @@
+  [1m[35m (7.3ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" character varying NOT NULL PRIMARY KEY) /*application='Track'*/[0m
+  [1m[35m (1.9ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" character varying NOT NULL PRIMARY KEY, "value" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='Track'*/[0m
+  [1m[35m (0.1ms)[0m  [1m[34mSELECT pg_try_advisory_lock(4458298095390735540) /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Track'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.4ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Track'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Create (2.3ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2026-08-11 09:01:42.047729', '2026-08-11 09:01:42.047731') RETURNING "key" /*application='Track'*/[0m
+Migrating to CreateProjects (20260811084452)
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN /*application='Track'*/[0m
+  [1m[35m (1.3ms)[0m  [1m[35mCREATE TABLE "projects" ("id" bigserial primary key, "name" character varying NOT NULL, "client_name" character varying NOT NULL, "client_address" text, "hourly_rate_cents" integer NOT NULL, "active" boolean DEFAULT TRUE NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260811084452') RETURNING "version" /*application='Track'*/[0m
+  [1m[36mTRANSACTION (1.9ms)[0m  [1m[35mCOMMIT /*application='Track'*/[0m
+  [1m[35m (0.1ms)[0m  [1m[34mSELECT pg_advisory_unlock(4458298095390735540) /*application='Track'*/[0m
+  [1m[35m (0.3ms)[0m  [1m[34mSELECT pg_try_advisory_lock(4458298095390735540) /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Track'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Track'*/[0m
+Migrating to CreateTimeEntries (20260811084453)
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN /*application='Track'*/[0m
+  [1m[35m (1.4ms)[0m  [1m[35mCREATE TABLE "time_entries" ("id" bigserial primary key, "project_id" bigint NOT NULL, "description" character varying NOT NULL, "started_at" timestamp(6), "ended_at" timestamp(6), "duration_minutes" integer, "hourly_rate_cents" integer NOT NULL, "billing_status" character varying DEFAULT 'uninvoiced' NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_f493b0c8e1"
+FOREIGN KEY ("project_id")
+  REFERENCES "projects" ("id")
+) /*application='Track'*/[0m
+  [1m[35m (0.2ms)[0m  [1m[35mCREATE INDEX "index_time_entries_on_project_id" ON "time_entries" ("project_id") /*application='Track'*/[0m
+  [1m[35m (0.2ms)[0m  [1m[35mCREATE INDEX "index_time_entries_on_billing_status" ON "time_entries" ("billing_status") /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260811084453') RETURNING "version" /*application='Track'*/[0m
+  [1m[36mTRANSACTION (1.8ms)[0m  [1m[35mCOMMIT /*application='Track'*/[0m
+  [1m[35m (0.1ms)[0m  [1m[34mSELECT pg_advisory_unlock(4458298095390735540) /*application='Track'*/[0m
+  [1m[35m (0.0ms)[0m  [1m[34mSELECT pg_try_advisory_lock(4458298095390735540) /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Track'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Track'*/[0m
+Migrating to CreateInvoices (20260811084454)
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN /*application='Track'*/[0m
+  [1m[35m (1.5ms)[0m  [1m[35mCREATE TABLE "invoices" ("id" bigserial primary key, "project_id" bigint NOT NULL, "status" character varying DEFAULT 'draft' NOT NULL, "number" character varying, "period_start" date, "period_end" date, "due_on" date, "issued_at" timestamp(6), "paid_at" timestamp(6), "sender_name" character varying, "sender_address" text, "sender_abn" character varying, "sender_email" character varying, "payment_instructions" text, "client_name" character varying, "client_address" text, "gst_rate" decimal(5,2) DEFAULT 10.0 NOT NULL, "subtotal_cents" integer DEFAULT 0 NOT NULL, "tax_cents" integer DEFAULT 0 NOT NULL, "total_cents" integer DEFAULT 0 NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_8442c0a799"
+FOREIGN KEY ("project_id")
+  REFERENCES "projects" ("id")
+) /*application='Track'*/[0m
+  [1m[35m (0.4ms)[0m  [1m[35mCREATE INDEX "index_invoices_on_project_id" ON "invoices" ("project_id") /*application='Track'*/[0m
+  [1m[35m (0.3ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_invoices_on_number" ON "invoices" ("number") /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260811084454') RETURNING "version" /*application='Track'*/[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mCOMMIT /*application='Track'*/[0m
+  [1m[35m (0.0ms)[0m  [1m[34mSELECT pg_advisory_unlock(4458298095390735540) /*application='Track'*/[0m
+  [1m[35m (0.0ms)[0m  [1m[34mSELECT pg_try_advisory_lock(4458298095390735540) /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Track'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Track'*/[0m
+Migrating to CreateInvoiceLines (20260811084455)
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN /*application='Track'*/[0m
+  [1m[35m (1.9ms)[0m  [1m[35mCREATE TABLE "invoice_lines" ("id" bigserial primary key, "invoice_id" bigint NOT NULL, "time_entry_id" bigint NOT NULL, "entry_date" date NOT NULL, "description" character varying NOT NULL, "duration_minutes" integer NOT NULL, "hourly_rate_cents" integer NOT NULL, "amount_cents" integer NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_93b334df88"
+FOREIGN KEY ("invoice_id")
+  REFERENCES "invoices" ("id")
+, CONSTRAINT "fk_rails_9f7675bc7d"
+FOREIGN KEY ("time_entry_id")
+  REFERENCES "time_entries" ("id")
+) /*application='Track'*/[0m
+  [1m[35m (0.2ms)[0m  [1m[35mCREATE INDEX "index_invoice_lines_on_invoice_id" ON "invoice_lines" ("invoice_id") /*application='Track'*/[0m
+  [1m[35m (0.2ms)[0m  [1m[35mCREATE INDEX "index_invoice_lines_on_time_entry_id" ON "invoice_lines" ("time_entry_id") /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260811084455') RETURNING "version" /*application='Track'*/[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mCOMMIT /*application='Track'*/[0m
+  [1m[35m (0.0ms)[0m  [1m[34mSELECT pg_advisory_unlock(4458298095390735540) /*application='Track'*/[0m
+  [1m[35m (0.0ms)[0m  [1m[34mSELECT pg_try_advisory_lock(4458298095390735540) /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Track'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Track'*/[0m
+Migrating to CreateBusinessSettings (20260811084456)
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN /*application='Track'*/[0m
+  [1m[35m (1.0ms)[0m  [1m[35mCREATE TABLE "business_settings" ("id" bigserial primary key, "business_name" character varying, "business_address" text, "abn" character varying, "email" character varying, "payment_instructions" text, "gst_rate" decimal(5,2) DEFAULT 10.0 NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.0ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260811084456') RETURNING "version" /*application='Track'*/[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mCOMMIT /*application='Track'*/[0m
+  [1m[35m (0.0ms)[0m  [1m[34mSELECT pg_advisory_unlock(4458298095390735540) /*application='Track'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Track'*/[0m
+Started GET "/up" for 192.168.107.1 at 2026-08-11 09:01:47 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Track'*/[0m
+Processing by Rails::HealthController#show as */*
+  Rendering html template
+  Rendered html template (Duration: 0.3ms | GC: 0.0ms)
+Completed 200 OK in 13ms (Views: 3.5ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:03:23 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as */*
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mCACHE Project Exists? (0.7ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:16
+  [1m[36mTimeEntry Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 18.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 22.9ms | GC: 0.0ms)
+Completed 200 OK in 97ms (Views: 24.7ms | ActiveRecord: 6.7ms (5 queries, 2 cached) | GC: 0.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:03:31 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as */*
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:16
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 12.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 14.4ms | GC: 0.0ms)
+Completed 200 OK in 34ms (Views: 14.6ms | ActiveRecord: 0.6ms (5 queries, 2 cached) | GC: 0.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:03:31 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as */*
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:16
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 3.6ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 6.9ms | GC: 0.0ms)
+Completed 200 OK in 22ms (Views: 6.8ms | ActiveRecord: 0.4ms (5 queries, 2 cached) | GC: 0.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:03:43 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:16
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 12.4ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 13.7ms | GC: 0.0ms)
+Completed 200 OK in 42ms (Views: 13.7ms | ActiveRecord: 0.8ms (5 queries, 2 cached) | GC: 12.5ms)
+
+
+Started GET "/projects/new" for 192.168.107.1 at 2026-08-11 09:03:48 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by ProjectsController#new as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering projects/new.html.erb within layouts/application
+  Rendered projects/_form.html.erb (Duration: 9.8ms | GC: 0.4ms)
+  Rendered projects/new.html.erb within layouts/application (Duration: 15.3ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 16.1ms | GC: 0.4ms)
+Completed 200 OK in 46ms (Views: 18.7ms | ActiveRecord: 1.8ms (0 queries, 0 cached) | GC: 0.8ms)
+
+
+Started POST "/projects" for 192.168.107.1 at 2026-08-11 09:04:41 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by ProjectsController#create as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "project" => {"name" => "Bower Branding", "client_name" => "Bower", "client_address" => "", "hourly_rate_cents" => "15000", "active" => "1"}, "commit" => "Create Project"}
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='create',application='Track',controller='projects'*/[0m
+  ↳ app/controllers/projects_controller.rb:14:in 'ProjectsController#create'
+  [1m[36mProject Create (1.0ms)[0m  [1m[32mINSERT INTO "projects" ("name", "client_name", "client_address", "hourly_rate_cents", "active", "created_at", "updated_at") VALUES ('Bower Branding', 'Bower', '', 15000, TRUE, '2026-08-11 09:04:41.273976', '2026-08-11 09:04:41.273976') RETURNING "id" /*action='create',application='Track',controller='projects'*/[0m
+  ↳ app/controllers/projects_controller.rb:14:in 'ProjectsController#create'
+  [1m[36mTRANSACTION (3.0ms)[0m  [1m[35mCOMMIT /*action='create',application='Track',controller='projects'*/[0m
+  ↳ app/controllers/projects_controller.rb:14:in 'ProjectsController#create'
+Redirected to http://localhost:3000/projects
+Completed 302 Found in 31ms (ActiveRecord: 4.1ms (1 query, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/projects" for 192.168.107.1 at 2026-08-11 09:04:41 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by ProjectsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering projects/index.html.erb within layouts/application
+  [1m[36mProject Load (0.5ms)[0m  [1m[34mSELECT "projects".* FROM "projects" ORDER BY "projects"."active" DESC, "projects"."name" ASC /*action='index',application='Track',controller='projects'*/[0m
+  ↳ app/views/projects/index.html.erb:1
+  Rendered projects/index.html.erb within layouts/application (Duration: 10.9ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 11.4ms | GC: 0.1ms)
+Completed 200 OK in 21ms (Views: 11.4ms | ActiveRecord: 0.5ms (1 query, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:04:45 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 16.6ms | GC: 0.2ms)
+  Rendered layout layouts/application.html.erb (Duration: 17.1ms | GC: 0.2ms)
+Completed 200 OK in 43ms (Views: 17.2ms | ActiveRecord: 0.8ms (5 queries, 1 cached) | GC: 0.3ms)
+
+
+Started POST "/time_entries/start" for 192.168.107.1 at 2026-08-11 09:04:54 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#start as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "description" => "Test tracking time", "project_id" => "1", "commit" => "Start"}
+  [1m[36mProject Load (0.4ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE AND "projects"."id" = 1 LIMIT 1 /*action='start',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:5:in 'TimeEntriesController#start'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='start',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:38:in 'TimeEntry#only_one_running_timer'
+  [1m[36mTimeEntry Exists? (0.7ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL AND "time_entries"."id" IS NOT NULL LIMIT 1 /*action='start',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:38:in 'TimeEntry#only_one_running_timer'
+  [1m[36mTimeEntry Create (0.4ms)[0m  [1m[32mINSERT INTO "time_entries" ("project_id", "description", "started_at", "ended_at", "duration_minutes", "hourly_rate_cents", "billing_status", "created_at", "updated_at") VALUES (1, 'Test tracking time', '2026-08-11 09:04:54.256560', NULL, NULL, 15000, 'uninvoiced', '2026-08-11 09:04:54.260836', '2026-08-11 09:04:54.260836') RETURNING "id" /*action='start',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:7:in 'TimeEntriesController#start'
+  [1m[36mTRANSACTION (1.8ms)[0m  [1m[35mCOMMIT /*action='start',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:7:in 'TimeEntriesController#start'
+Redirected to http://localhost:3000/
+Completed 302 Found in 35ms (ActiveRecord: 3.4ms (3 queries, 0 cached) | GC: 0.2ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:04:54 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:9
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:16
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:16
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 30.3ms | GC: 7.3ms)
+  Rendered layout layouts/application.html.erb (Duration: 31.0ms | GC: 7.6ms)
+Completed 200 OK in 44ms (Views: 30.5ms | ActiveRecord: 1.0ms (8 queries, 1 cached) | GC: 7.6ms)
+
+
+Started PATCH "/time_entries/1/stop" for 192.168.107.1 at 2026-08-11 09:05:10 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#stop as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "1"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 1 LIMIT 1 /*action='stop',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:63:in 'TimeEntriesController#set_time_entry'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='stop',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:32:in 'TimeEntry#stop!'
+  [1m[36mTimeEntry Update (2.0ms)[0m  [1m[33mUPDATE "time_entries" SET "ended_at" = '2026-08-11 09:05:10.306338', "duration_minutes" = 1, "updated_at" = '2026-08-11 09:05:10.308912' WHERE "time_entries"."id" = 1 /*action='stop',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:32:in 'TimeEntry#stop!'
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mCOMMIT /*action='stop',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:32:in 'TimeEntry#stop!'
+Redirected to http://localhost:3000/
+Completed 302 Found in 37ms (ActiveRecord: 3.8ms (2 queries, 0 cached) | GC: 3.6ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:05:10 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 14.7ms | GC: 4.6ms)
+  Rendered layout layouts/application.html.erb (Duration: 15.2ms | GC: 4.6ms)
+Completed 200 OK in 29ms (Views: 15.5ms | ActiveRecord: 0.9ms (7 queries, 1 cached) | GC: 5.3ms)
+
+
+Started GET "/time_entries/1/edit" for 192.168.107.1 at 2026-08-11 09:05:14 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#edit as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTimeEntry Load (0.7ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 1 LIMIT 1 /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:63:in 'TimeEntriesController#set_time_entry'
+  Rendering layout layouts/application.html.erb
+  Rendering time_entries/edit.html.erb within layouts/application
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/views/time_entries/edit.html.erb:1
+  Rendered time_entries/edit.html.erb within layouts/application (Duration: 10.9ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 11.9ms | GC: 0.4ms)
+Completed 200 OK in 32ms (Views: 12.5ms | ActiveRecord: 0.9ms (2 queries, 0 cached) | GC: 0.4ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:05:17 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (1.9ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 9.1ms | GC: 0.3ms)
+  Rendered layout layouts/application.html.erb (Duration: 10.3ms | GC: 0.3ms)
+Completed 200 OK in 33ms (Views: 10.4ms | ActiveRecord: 2.5ms (7 queries, 1 cached) | GC: 0.3ms)
+
+
+Started GET "/?range=month" for 192.168.107.1 at 2026-08-11 09:05:20 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "month"}
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 9.4ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 9.9ms | GC: 0.1ms)
+Completed 200 OK in 24ms (Views: 9.5ms | ActiveRecord: 0.7ms (7 queries, 1 cached) | GC: 0.3ms)
+
+
+Started GET "/?range=year" for 192.168.107.1 at 2026-08-11 09:05:21 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "year"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2025-12-31 13:00:00' AND '2026-12-31 12:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2025-12-31 13:00:00' AND '2026-12-31 12:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 9.2ms | GC: 0.6ms)
+  Rendered layout layouts/application.html.erb (Duration: 9.5ms | GC: 0.6ms)
+Completed 200 OK in 29ms (Views: 9.2ms | ActiveRecord: 0.8ms (7 queries, 1 cached) | GC: 0.8ms)
+
+
+Started GET "/?range=month" for 192.168.107.1 at 2026-08-11 09:05:21 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "month"}
+  [1m[36mTimeEntry Load (0.5ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 6.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.0ms | GC: 0.0ms)
+Completed 200 OK in 23ms (Views: 6.6ms | ActiveRecord: 1.3ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/?range=week" for 192.168.107.1 at 2026-08-11 09:05:22 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "week"}
+  [1m[36mTimeEntry Load (0.7ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 10.0ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 11.9ms | GC: 0.0ms)
+Completed 200 OK in 34ms (Views: 12.5ms | ActiveRecord: 1.5ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/?range=custom&start_date=&end_date=&commit=Filter" for 192.168.107.1 at 2026-08-11 09:05:25 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "custom", "start_date" => "", "end_date" => "", "commit" => "Filter"}
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 17.1ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 17.5ms | GC: 0.4ms)
+Completed 200 OK in 49ms (Views: 17.3ms | ActiveRecord: 1.1ms (7 queries, 1 cached) | GC: 12.1ms)
+
+
+Started GET "/?range=custom&start_date=&end_date=&commit=Filter" for 192.168.107.1 at 2026-08-11 09:05:27 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "custom", "start_date" => "", "end_date" => "", "commit" => "Filter"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 6.4ms | GC: 0.3ms)
+  Rendered layout layouts/application.html.erb (Duration: 6.8ms | GC: 0.3ms)
+Completed 200 OK in 27ms (Views: 6.4ms | ActiveRecord: 0.9ms (7 queries, 1 cached) | GC: 0.7ms)
+
+
+Started GET "/projects" for 192.168.107.1 at 2026-08-11 09:05:35 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by ProjectsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering projects/index.html.erb within layouts/application
+  [1m[36mProject Load (0.4ms)[0m  [1m[34mSELECT "projects".* FROM "projects" ORDER BY "projects"."active" DESC, "projects"."name" ASC /*action='index',application='Track',controller='projects'*/[0m
+  ↳ app/views/projects/index.html.erb:1
+  Rendered projects/index.html.erb within layouts/application (Duration: 3.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.1ms | GC: 0.0ms)
+Completed 200 OK in 22ms (Views: 4.2ms | ActiveRecord: 0.4ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/invoices" for 192.168.107.1 at 2026-08-11 09:05:36 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/index.html.erb within layouts/application
+  [1m[36mInvoice Load (0.5ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" ORDER BY "invoices"."created_at" DESC /*action='index',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/index.html.erb:1
+  Rendered invoices/index.html.erb within layouts/application (Duration: 3.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.9ms | GC: 0.0ms)
+Completed 200 OK in 43ms (Views: 5.0ms | ActiveRecord: 1.4ms (1 query, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/invoices/new" for 192.168.107.1 at 2026-08-11 09:05:39 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#new as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/new.html.erb within layouts/application
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='new',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/new.html.erb:1
+  Rendered invoices/new.html.erb within layouts/application (Duration: 8.6ms | GC: 0.5ms)
+  Rendered layout layouts/application.html.erb (Duration: 9.4ms | GC: 0.5ms)
+Completed 200 OK in 37ms (Views: 9.5ms | ActiveRecord: 1.2ms (1 query, 0 cached) | GC: 0.6ms)
+
+
+Started POST "/invoices" for 192.168.107.1 at 2026-08-11 09:05:43 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#create as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "invoice" => {"project_id" => "1", "period_start" => "2026-08-01", "period_end" => "2026-08-31", "due_on" => "2026-08-25"}, "commit" => "Create draft"}
+  [1m[36mProject Load (0.4ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 LIMIT 1 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:15:in 'InvoicesController#create'
+  [1m[36mTimeEntry Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."project_id" = 1 AND "time_entries"."ended_at" IS NOT NULL AND "time_entries"."billing_status" = 'uninvoiced' AND "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' LIMIT 1 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:14:in 'Invoice.build_draft!'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/business_setting.rb:5:in 'BusinessSetting.current'
+  [1m[36mBusinessSetting Load (0.5ms)[0m  [1m[34mSELECT "business_settings".* FROM "business_settings" ORDER BY "business_settings"."id" ASC LIMIT 1 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/business_setting.rb:5:in 'BusinessSetting.current'
+  [1m[36mBusinessSetting Create (0.6ms)[0m  [1m[32mINSERT INTO "business_settings" ("business_name", "business_address", "abn", "email", "payment_instructions", "gst_rate", "created_at", "updated_at") VALUES (NULL, NULL, NULL, NULL, NULL, 10.0, '2026-08-11 09:05:43.248212', '2026-08-11 09:05:43.248212') RETURNING "id" /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/business_setting.rb:5:in 'BusinessSetting.current'
+  [1m[36mInvoice Create (0.3ms)[0m  [1m[32mINSERT INTO "invoices" ("project_id", "status", "number", "period_start", "period_end", "due_on", "issued_at", "paid_at", "sender_name", "sender_address", "sender_abn", "sender_email", "payment_instructions", "client_name", "client_address", "gst_rate", "subtotal_cents", "tax_cents", "total_cents", "created_at", "updated_at") VALUES (1, 'draft', NULL, '2026-08-01', '2026-08-31', '2026-08-25', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 10.0, 0, 0, 0, '2026-08-11 09:05:43.254268', '2026-08-11 09:05:43.254268') RETURNING "id" /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:17:in 'block in Invoice.build_draft!'
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."project_id" = 1 AND "time_entries"."ended_at" IS NOT NULL AND "time_entries"."billing_status" = 'uninvoiced' AND "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' ORDER BY "time_entries"."started_at" ASC /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:18:in 'block in Invoice.build_draft!'
+  [1m[36mInvoiceLine Create (0.4ms)[0m  [1m[32mINSERT INTO "invoice_lines" ("invoice_id", "time_entry_id", "entry_date", "description", "duration_minutes", "hourly_rate_cents", "amount_cents", "created_at", "updated_at") VALUES (1, 1, '2026-08-11', 'Test tracking time', 1, 15000, 250, '2026-08-11 09:05:43.269071', '2026-08-11 09:05:43.269071') RETURNING "id" /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:19:in 'block (2 levels) in Invoice.build_draft!'
+  [1m[36mInvoiceLine Sum (0.3ms)[0m  [1m[34mSELECT SUM("invoice_lines"."amount_cents") FROM "invoice_lines" WHERE "invoice_lines"."invoice_id" = 1 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:74:in 'Invoice#recalculate_totals!'
+  [1m[36mInvoice Update (0.1ms)[0m  [1m[33mUPDATE "invoices" SET "subtotal_cents" = 250, "tax_cents" = 25, "total_cents" = 275, "updated_at" = '2026-08-11 09:05:43.273271' WHERE "invoices"."id" = 1 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:77:in 'Invoice#recalculate_totals!'
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mCOMMIT /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:16:in 'Invoice.build_draft!'
+Redirected to http://localhost:3000/invoices/1
+Completed 302 Found in 79ms (ActiveRecord: 6.8ms (9 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/invoices/1" for 192.168.107.1 at 2026-08-11 09:05:43 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mInvoice Load (0.2ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" WHERE "invoices"."id" = 1 LIMIT 1 /*action='show',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:71:in 'InvoicesController#set_invoice'
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/show.html.erb within layouts/application
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 LIMIT 1 /*action='show',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/show.html.erb:1
+  [1m[36mInvoiceLine Load (0.3ms)[0m  [1m[34mSELECT "invoice_lines".* FROM "invoice_lines" WHERE "invoice_lines"."invoice_id" = 1 ORDER BY "invoice_lines"."entry_date" ASC, "invoice_lines"."id" ASC /*action='show',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/show.html.erb:1
+  Rendered invoices/show.html.erb within layouts/application (Duration: 9.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 10.5ms | GC: 0.2ms)
+Completed 200 OK in 27ms (Views: 10.3ms | ActiveRecord: 0.5ms (3 queries, 0 cached) | GC: 6.0ms)
+
+
+Started DELETE "/invoices/1" for 192.168.107.1 at 2026-08-11 09:05:56 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#destroy as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "1"}
+  [1m[36mInvoice Load (0.4ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" WHERE "invoices"."id" = 1 LIMIT 1 /*action='destroy',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:71:in 'InvoicesController#set_invoice'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='destroy',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:52:in 'InvoicesController#destroy'
+  [1m[36mInvoiceLine Load (0.8ms)[0m  [1m[34mSELECT "invoice_lines".* FROM "invoice_lines" WHERE "invoice_lines"."invoice_id" = 1 /*action='destroy',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:52:in 'InvoicesController#destroy'
+  [1m[36mInvoiceLine Destroy (0.1ms)[0m  [1m[31mDELETE FROM "invoice_lines" WHERE "invoice_lines"."id" = 1 /*action='destroy',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:52:in 'InvoicesController#destroy'
+  [1m[36mInvoice Destroy (0.2ms)[0m  [1m[31mDELETE FROM "invoices" WHERE "invoices"."id" = 1 /*action='destroy',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:52:in 'InvoicesController#destroy'
+  [1m[36mTRANSACTION (5.2ms)[0m  [1m[35mCOMMIT /*action='destroy',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:52:in 'InvoicesController#destroy'
+Redirected to http://localhost:3000/invoices
+Completed 302 Found in 32ms (ActiveRecord: 6.8ms (4 queries, 0 cached) | GC: 0.4ms)
+
+
+Started GET "/invoices" for 192.168.107.1 at 2026-08-11 09:05:56 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/index.html.erb within layouts/application
+  [1m[36mInvoice Load (0.2ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" ORDER BY "invoices"."created_at" DESC /*action='index',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/index.html.erb:1
+  Rendered invoices/index.html.erb within layouts/application (Duration: 0.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.2ms | GC: 0.0ms)
+Completed 200 OK in 11ms (Views: 1.3ms | ActiveRecord: 0.2ms (1 query, 0 cached) | GC: 0.2ms)
+
+
+Started GET "/projects" for 192.168.107.1 at 2026-08-11 09:05:58 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by ProjectsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering projects/index.html.erb within layouts/application
+  [1m[36mProject Load (0.4ms)[0m  [1m[34mSELECT "projects".* FROM "projects" ORDER BY "projects"."active" DESC, "projects"."name" ASC /*action='index',application='Track',controller='projects'*/[0m
+  ↳ app/views/projects/index.html.erb:1
+  Rendered projects/index.html.erb within layouts/application (Duration: 2.5ms | GC: 0.5ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.2ms | GC: 0.5ms)
+Completed 200 OK in 20ms (Views: 3.3ms | ActiveRecord: 0.4ms (1 query, 0 cached) | GC: 0.5ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:05:59 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 5.7ms | GC: 0.2ms)
+  Rendered layout layouts/application.html.erb (Duration: 6.0ms | GC: 0.2ms)
+Completed 200 OK in 28ms (Views: 11.2ms | ActiveRecord: 0.8ms (7 queries, 1 cached) | GC: 0.2ms)
+
+
+Started GET "/projects" for 192.168.107.1 at 2026-08-11 09:06:14 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by ProjectsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering projects/index.html.erb within layouts/application
+  [1m[36mProject Load (0.4ms)[0m  [1m[34mSELECT "projects".* FROM "projects" ORDER BY "projects"."active" DESC, "projects"."name" ASC /*action='index',application='Track',controller='projects'*/[0m
+  ↳ app/views/projects/index.html.erb:1
+  Rendered projects/index.html.erb within layouts/application (Duration: 8.4ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 10.1ms | GC: 0.0ms)
+Completed 200 OK in 30ms (Views: 11.1ms | ActiveRecord: 0.4ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/invoices" for 192.168.107.1 at 2026-08-11 09:06:15 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/index.html.erb within layouts/application
+  [1m[36mInvoice Load (0.5ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" ORDER BY "invoices"."created_at" DESC /*action='index',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/index.html.erb:1
+  Rendered invoices/index.html.erb within layouts/application (Duration: 1.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.0ms | GC: 0.0ms)
+Completed 200 OK in 23ms (Views: 4.0ms | ActiveRecord: 0.5ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/settings" for 192.168.107.1 at 2026-08-11 09:06:16 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by SettingsController#show as HTML
+  [1m[36mBusinessSetting Load (0.4ms)[0m  [1m[34mSELECT "business_settings".* FROM "business_settings" ORDER BY "business_settings"."id" ASC LIMIT 1 /*action='show',application='Track',controller='settings'*/[0m
+  ↳ app/models/business_setting.rb:5:in 'BusinessSetting.current'
+  Rendering layout layouts/application.html.erb
+  Rendering settings/show.html.erb within layouts/application
+  Rendered settings/show.html.erb within layouts/application (Duration: 10.2ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 11.6ms | GC: 0.4ms)
+Completed 200 OK in 34ms (Views: 14.1ms | ActiveRecord: 0.4ms (1 query, 0 cached) | GC: 0.4ms)
+
+
+Started GET "/invoices" for 192.168.107.1 at 2026-08-11 09:06:17 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/index.html.erb within layouts/application
+  [1m[36mInvoice Load (0.3ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" ORDER BY "invoices"."created_at" DESC /*action='index',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/index.html.erb:1
+  Rendered invoices/index.html.erb within layouts/application (Duration: 0.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.4ms | GC: 0.0ms)
+Completed 200 OK in 14ms (Views: 1.5ms | ActiveRecord: 0.3ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/projects" for 192.168.107.1 at 2026-08-11 09:06:18 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by ProjectsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering projects/index.html.erb within layouts/application
+  [1m[36mProject Load (0.6ms)[0m  [1m[34mSELECT "projects".* FROM "projects" ORDER BY "projects"."active" DESC, "projects"."name" ASC /*action='index',application='Track',controller='projects'*/[0m
+  ↳ app/views/projects/index.html.erb:1
+  Rendered projects/index.html.erb within layouts/application (Duration: 10.1ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 11.7ms | GC: 0.0ms)
+Completed 200 OK in 35ms (Views: 16.5ms | ActiveRecord: 0.6ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:06:19 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 6.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 18.7ms | GC: 0.0ms)
+Completed 200 OK in 41ms (Views: 19.7ms | ActiveRecord: 1.0ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:06:23 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:08:04 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 19.5ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 21.6ms | GC: 0.4ms)
+Completed 200 OK in 62ms (Views: 23.7ms | ActiveRecord: 4.0ms (7 queries, 1 cached) | GC: 0.9ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:08:04 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/projects" for 192.168.107.1 at 2026-08-11 09:08:07 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by ProjectsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering projects/index.html.erb within layouts/application
+  [1m[36mProject Load (0.3ms)[0m  [1m[34mSELECT "projects".* FROM "projects" ORDER BY "projects"."active" DESC, "projects"."name" ASC /*action='index',application='Track',controller='projects'*/[0m
+  ↳ app/views/projects/index.html.erb:1
+  Rendered projects/index.html.erb within layouts/application (Duration: 8.4ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 9.6ms | GC: 0.0ms)
+Completed 200 OK in 31ms (Views: 11.8ms | ActiveRecord: 0.3ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:08:07 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/invoices" for 192.168.107.1 at 2026-08-11 09:08:08 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/index.html.erb within layouts/application
+  [1m[36mInvoice Load (0.2ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" ORDER BY "invoices"."created_at" DESC /*action='index',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/index.html.erb:1
+  Rendered invoices/index.html.erb within layouts/application (Duration: 2.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.9ms | GC: 0.1ms)
+Completed 200 OK in 29ms (Views: 5.5ms | ActiveRecord: 1.0ms (1 query, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:08:08 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/settings" for 192.168.107.1 at 2026-08-11 09:08:10 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by SettingsController#show as HTML
+  [1m[36mBusinessSetting Load (0.2ms)[0m  [1m[34mSELECT "business_settings".* FROM "business_settings" ORDER BY "business_settings"."id" ASC LIMIT 1 /*action='show',application='Track',controller='settings'*/[0m
+  ↳ app/models/business_setting.rb:5:in 'BusinessSetting.current'
+  Rendering layout layouts/application.html.erb
+  Rendering settings/show.html.erb within layouts/application
+  Rendered settings/show.html.erb within layouts/application (Duration: 3.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.8ms | GC: 0.0ms)
+Completed 200 OK in 32ms (Views: 6.7ms | ActiveRecord: 1.7ms (1 query, 0 cached) | GC: 0.2ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:08:10 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/invoices" for 192.168.107.1 at 2026-08-11 09:08:11 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/index.html.erb within layouts/application
+  [1m[36mInvoice Load (0.3ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" ORDER BY "invoices"."created_at" DESC /*action='index',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/index.html.erb:1
+  Rendered invoices/index.html.erb within layouts/application (Duration: 1.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 2.1ms | GC: 0.0ms)
+Completed 200 OK in 21ms (Views: 2.4ms | ActiveRecord: 0.3ms (1 query, 0 cached) | GC: 4.4ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:08:11 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/invoices" for 192.168.107.1 at 2026-08-11 09:08:27 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/index.html.erb within layouts/application
+  [1m[36mInvoice Load (0.2ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" ORDER BY "invoices"."created_at" DESC /*action='index',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/index.html.erb:1
+  Rendered invoices/index.html.erb within layouts/application (Duration: 2.4ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.7ms | GC: 0.0ms)
+Completed 200 OK in 25ms (Views: 6.7ms | ActiveRecord: 1.1ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:08:28 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:08:32 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 16.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 17.5ms | GC: 0.0ms)
+Completed 200 OK in 56ms (Views: 19.5ms | ActiveRecord: 3.5ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:08:32 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/?range=month" for 192.168.107.1 at 2026-08-11 09:09:05 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "month"}
+  [1m[36mTimeEntry Load (1.8ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 12.0ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 12.4ms | GC: 0.1ms)
+Completed 200 OK in 34ms (Views: 12.3ms | ActiveRecord: 2.5ms (7 queries, 1 cached) | GC: 0.1ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:09:05 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/?range=year" for 192.168.107.1 at 2026-08-11 09:09:06 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "year"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2025-12-31 13:00:00' AND '2026-12-31 12:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2025-12-31 13:00:00' AND '2026-12-31 12:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 9.8ms | GC: 0.3ms)
+  Rendered layout layouts/application.html.erb (Duration: 10.3ms | GC: 0.3ms)
+Completed 200 OK in 28ms (Views: 9.7ms | ActiveRecord: 1.0ms (7 queries, 1 cached) | GC: 0.3ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:09:06 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/?range=year" for 192.168.107.1 at 2026-08-11 09:09:07 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "year"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2025-12-31 13:00:00' AND '2026-12-31 12:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2025-12-31 13:00:00' AND '2026-12-31 12:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 13.7ms | GC: 3.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 14.1ms | GC: 3.1ms)
+Completed 200 OK in 33ms (Views: 13.4ms | ActiveRecord: 1.2ms (7 queries, 1 cached) | GC: 3.1ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:09:07 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/?range=month" for 192.168.107.1 at 2026-08-11 09:09:08 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "month"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 4.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 5.1ms | GC: 0.0ms)
+Completed 200 OK in 22ms (Views: 4.8ms | ActiveRecord: 0.8ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:09:08 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/?range=week" for 192.168.107.1 at 2026-08-11 09:09:08 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "week"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 6.0ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 6.4ms | GC: 0.0ms)
+Completed 200 OK in 26ms (Views: 5.9ms | ActiveRecord: 1.1ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:09:08 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/?range=custom&start_date=2026-08-10&end_date=2026-08-12&commit=Filter" for 192.168.107.1 at 2026-08-11 09:09:17 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "custom", "start_date" => "2026-08-10", "end_date" => "2026-08-12", "commit" => "Filter"}
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE (started_at >= '2026-08-09 14:00:00') AND (started_at <= '2026-08-12 13:59:59.999999') LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE (started_at >= '2026-08-09 14:00:00') AND (started_at <= '2026-08-12 13:59:59.999999') ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 6.8ms | GC: 0.3ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.1ms | GC: 0.3ms)
+Completed 200 OK in 27ms (Views: 6.7ms | ActiveRecord: 1.1ms (7 queries, 1 cached) | GC: 0.3ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:09:17 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/?range=custom&start_date=2026-08-09&end_date=2026-08-09&commit=Filter" for 192.168.107.1 at 2026-08-11 09:09:25 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  Parameters: {"range" => "custom", "start_date" => "2026-08-09", "end_date" => "2026-08-09", "commit" => "Filter"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE (started_at >= '2026-08-08 14:00:00') AND (started_at <= '2026-08-09 13:59:59.999999') LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 4.1ms | GC: 0.3ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.6ms | GC: 0.3ms)
+Completed 200 OK in 20ms (Views: 4.3ms | ActiveRecord: 0.8ms (5 queries, 1 cached) | GC: 0.3ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:09:25 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:09:33 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.6ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 6.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.2ms | GC: 0.0ms)
+Completed 200 OK in 28ms (Views: 6.6ms | ActiveRecord: 1.5ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:09:33 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:11:39 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as */*
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 13.8ms | GC: 0.5ms)
+  Rendered layout layouts/application.html.erb (Duration: 17.5ms | GC: 0.5ms)
+Completed 200 OK in 44ms (Views: 19.2ms | ActiveRecord: 2.8ms (7 queries, 1 cached) | GC: 2.7ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:12:01 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.3ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 7.9ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 9.2ms | GC: 0.4ms)
+Completed 200 OK in 29ms (Views: 9.1ms | ActiveRecord: 1.2ms (7 queries, 1 cached) | GC: 0.4ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:12:02 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/time_entries/1/edit" for 192.168.107.1 at 2026-08-11 09:12:05 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#edit as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 1 LIMIT 1 /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:63:in 'TimeEntriesController#set_time_entry'
+  Rendering layout layouts/application.html.erb
+  Rendering time_entries/edit.html.erb within layouts/application
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/views/time_entries/edit.html.erb:20
+  Rendered time_entries/edit.html.erb within layouts/application (Duration: 6.0ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 8.7ms | GC: 0.4ms)
+Completed 200 OK in 26ms (Views: 10.0ms | ActiveRecord: 0.5ms (2 queries, 0 cached) | GC: 0.4ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:12:05 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started PATCH "/time_entries/1" for 192.168.107.1 at 2026-08-11 09:12:13 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#update as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "time_entry" => {"description" => "Test tracking time", "project_id" => "1", "started_at" => "2026-08-11T18:04:54", "ended_at" => "2026-08-11T19:05:10"}, "commit" => "Save changes", "id" => "1"}
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 1 LIMIT 1 /*action='update',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:63:in 'TimeEntriesController#set_time_entry'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='update',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:35:in 'TimeEntriesController#update'
+  [1m[36mTimeEntry Update (0.9ms)[0m  [1m[33mUPDATE "time_entries" SET "started_at" = '2026-08-11 08:04:54', "ended_at" = '2026-08-11 09:05:10', "duration_minutes" = 61, "updated_at" = '2026-08-11 09:12:13.052577' WHERE "time_entries"."id" = 1 /*action='update',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:35:in 'TimeEntriesController#update'
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mCOMMIT /*action='update',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:35:in 'TimeEntriesController#update'
+Redirected to http://localhost:3000/
+Completed 302 Found in 30ms (ActiveRecord: 2.8ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:12:13 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 3.6ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.4ms | GC: 0.0ms)
+Completed 200 OK in 14ms (Views: 4.3ms | ActiveRecord: 0.5ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:12:13 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started POST "/time_entries/1/restart" for 192.168.107.1 at 2026-08-11 09:12:49 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#restart as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "1"}
+  [1m[36mTimeEntry Load (1.7ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 1 LIMIT 1 /*action='restart',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:63:in 'TimeEntriesController#set_time_entry'
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 LIMIT 1 /*action='restart',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:52:in 'TimeEntriesController#restart'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='restart',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:40:in 'TimeEntry#only_one_running_timer'
+  [1m[36mTimeEntry Exists? (0.6ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL AND "time_entries"."id" IS NOT NULL LIMIT 1 /*action='restart',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:40:in 'TimeEntry#only_one_running_timer'
+  [1m[36mTimeEntry Create (0.2ms)[0m  [1m[32mINSERT INTO "time_entries" ("project_id", "description", "started_at", "ended_at", "duration_minutes", "hourly_rate_cents", "billing_status", "created_at", "updated_at") VALUES (1, 'Test tracking time', '2026-08-11 09:12:50.025895', NULL, NULL, 15000, 'uninvoiced', '2026-08-11 09:12:50.028412', '2026-08-11 09:12:50.028412') RETURNING "id" /*action='restart',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:54:in 'TimeEntriesController#restart'
+  [1m[36mTRANSACTION (2.2ms)[0m  [1m[35mCOMMIT /*action='restart',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:54:in 'TimeEntriesController#restart'
+Redirected to http://localhost:3000/
+Completed 302 Found in 33ms (ActiveRecord: 4.9ms (4 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:12:50 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:9
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:16
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:16
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 5.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 5.5ms | GC: 0.0ms)
+Completed 200 OK in 16ms (Views: 5.2ms | ActiveRecord: 0.7ms (8 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:12:50 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started PATCH "/time_entries/2/stop" for 192.168.107.1 at 2026-08-11 09:13:11 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#stop as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "2"}
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 2 LIMIT 1 /*action='stop',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:63:in 'TimeEntriesController#set_time_entry'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='stop',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:34:in 'TimeEntry#stop!'
+  [1m[36mTimeEntry Update (1.4ms)[0m  [1m[33mUPDATE "time_entries" SET "ended_at" = '2026-08-11 09:13:11.042187', "duration_minutes" = 1, "updated_at" = '2026-08-11 09:13:11.043437' WHERE "time_entries"."id" = 2 /*action='stop',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:34:in 'TimeEntry#stop!'
+  [1m[36mTRANSACTION (1.8ms)[0m  [1m[35mCOMMIT /*action='stop',application='Track',controller='time_entries'*/[0m
+  ↳ app/models/time_entry.rb:34:in 'TimeEntry#stop!'
+Redirected to http://localhost:3000/
+Completed 302 Found in 24ms (ActiveRecord: 3.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:13:11 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 4.1ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.4ms | GC: 0.0ms)
+Completed 200 OK in 15ms (Views: 4.1ms | ActiveRecord: 0.7ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:13:11 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/time_entries/2/edit" for 192.168.107.1 at 2026-08-11 09:13:14 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#edit as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mTimeEntry Load (0.7ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 2 LIMIT 1 /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:63:in 'TimeEntriesController#set_time_entry'
+  Rendering layout layouts/application.html.erb
+  Rendering time_entries/edit.html.erb within layouts/application
+  [1m[36mProject Load (0.3ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/views/time_entries/edit.html.erb:20
+  Rendered time_entries/edit.html.erb within layouts/application (Duration: 8.0ms | GC: 0.2ms)
+  Rendered layout layouts/application.html.erb (Duration: 8.7ms | GC: 0.2ms)
+Completed 200 OK in 30ms (Views: 9.1ms | ActiveRecord: 0.9ms (2 queries, 0 cached) | GC: 0.2ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:13:14 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started PATCH "/time_entries/2" for 192.168.107.1 at 2026-08-11 09:13:19 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#update as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "time_entry" => {"description" => "Test tracking time", "project_id" => "1", "started_at" => "2026-08-11T17:12:50", "ended_at" => "2026-08-11T19:13:11"}, "commit" => "Save changes", "id" => "2"}
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 2 LIMIT 1 /*action='update',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:63:in 'TimeEntriesController#set_time_entry'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='update',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:35:in 'TimeEntriesController#update'
+  [1m[36mTimeEntry Update (1.1ms)[0m  [1m[33mUPDATE "time_entries" SET "started_at" = '2026-08-11 07:12:50', "ended_at" = '2026-08-11 09:13:11', "duration_minutes" = 121, "updated_at" = '2026-08-11 09:13:20.020604' WHERE "time_entries"."id" = 2 /*action='update',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:35:in 'TimeEntriesController#update'
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mCOMMIT /*action='update',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:35:in 'TimeEntriesController#update'
+Redirected to http://localhost:3000/
+Completed 302 Found in 19ms (ActiveRecord: 3.1ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:13:20 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 5.5ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 5.8ms | GC: 0.1ms)
+Completed 200 OK in 17ms (Views: 5.4ms | ActiveRecord: 0.8ms (7 queries, 1 cached) | GC: 0.3ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:13:20 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/projects" for 192.168.107.1 at 2026-08-11 09:13:26 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by ProjectsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering projects/index.html.erb within layouts/application
+  [1m[36mProject Load (0.4ms)[0m  [1m[34mSELECT "projects".* FROM "projects" ORDER BY "projects"."active" DESC, "projects"."name" ASC /*action='index',application='Track',controller='projects'*/[0m
+  ↳ app/views/projects/index.html.erb:1
+  Rendered projects/index.html.erb within layouts/application (Duration: 3.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.4ms | GC: 0.0ms)
+Completed 200 OK in 24ms (Views: 6.1ms | ActiveRecord: 0.4ms (1 query, 0 cached) | GC: 0.4ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:13:26 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/invoices" for 192.168.107.1 at 2026-08-11 09:13:29 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/index.html.erb within layouts/application
+  [1m[36mInvoice Load (0.3ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" ORDER BY "invoices"."created_at" DESC /*action='index',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/index.html.erb:1
+  Rendered invoices/index.html.erb within layouts/application (Duration: 2.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.7ms | GC: 0.0ms)
+Completed 200 OK in 36ms (Views: 5.3ms | ActiveRecord: 1.1ms (1 query, 0 cached) | GC: 0.4ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:13:29 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/invoices/new" for 192.168.107.1 at 2026-08-11 09:13:31 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#new as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/new.html.erb within layouts/application
+  [1m[36mProject Load (0.3ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='new',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/new.html.erb:1
+  Rendered invoices/new.html.erb within layouts/application (Duration: 3.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.2ms | GC: 0.0ms)
+Completed 200 OK in 29ms (Views: 4.4ms | ActiveRecord: 1.2ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:13:31 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started POST "/invoices" for 192.168.107.1 at 2026-08-11 09:13:33 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#create as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "invoice" => {"project_id" => "1", "period_start" => "2026-08-01", "period_end" => "2026-08-31", "due_on" => "2026-08-25"}, "commit" => "Create draft"}
+  [1m[36mProject Load (0.4ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 LIMIT 1 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:15:in 'InvoicesController#create'
+  [1m[36mTimeEntry Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."project_id" = 1 AND "time_entries"."ended_at" IS NOT NULL AND "time_entries"."billing_status" = 'uninvoiced' AND "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' LIMIT 1 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:14:in 'Invoice.build_draft!'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/business_setting.rb:5:in 'BusinessSetting.current'
+  [1m[36mBusinessSetting Load (0.1ms)[0m  [1m[34mSELECT "business_settings".* FROM "business_settings" ORDER BY "business_settings"."id" ASC LIMIT 1 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/business_setting.rb:5:in 'BusinessSetting.current'
+  [1m[36mInvoice Create (0.7ms)[0m  [1m[32mINSERT INTO "invoices" ("project_id", "status", "number", "period_start", "period_end", "due_on", "issued_at", "paid_at", "sender_name", "sender_address", "sender_abn", "sender_email", "payment_instructions", "client_name", "client_address", "gst_rate", "subtotal_cents", "tax_cents", "total_cents", "created_at", "updated_at") VALUES (1, 'draft', NULL, '2026-08-01', '2026-08-31', '2026-08-25', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 10.0, 0, 0, 0, '2026-08-11 09:13:33.849220', '2026-08-11 09:13:33.849220') RETURNING "id" /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:17:in 'block in Invoice.build_draft!'
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."project_id" = 1 AND "time_entries"."ended_at" IS NOT NULL AND "time_entries"."billing_status" = 'uninvoiced' AND "time_entries"."started_at" BETWEEN '2026-07-31 14:00:00' AND '2026-08-31 13:59:59.999999' ORDER BY "time_entries"."started_at" ASC /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:18:in 'block in Invoice.build_draft!'
+  [1m[36mInvoiceLine Create (0.2ms)[0m  [1m[32mINSERT INTO "invoice_lines" ("invoice_id", "time_entry_id", "entry_date", "description", "duration_minutes", "hourly_rate_cents", "amount_cents", "created_at", "updated_at") VALUES (2, 2, '2026-08-11', 'Test tracking time', 121, 15000, 30250, '2026-08-11 09:13:33.868752', '2026-08-11 09:13:33.868752') RETURNING "id" /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:19:in 'block (2 levels) in Invoice.build_draft!'
+  [1m[36mInvoiceLine Create (0.1ms)[0m  [1m[32mINSERT INTO "invoice_lines" ("invoice_id", "time_entry_id", "entry_date", "description", "duration_minutes", "hourly_rate_cents", "amount_cents", "created_at", "updated_at") VALUES (2, 1, '2026-08-11', 'Test tracking time', 61, 15000, 15250, '2026-08-11 09:13:33.871566', '2026-08-11 09:13:33.871566') RETURNING "id" /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:19:in 'block (2 levels) in Invoice.build_draft!'
+  [1m[36mInvoiceLine Sum (0.1ms)[0m  [1m[34mSELECT SUM("invoice_lines"."amount_cents") FROM "invoice_lines" WHERE "invoice_lines"."invoice_id" = 2 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:74:in 'Invoice#recalculate_totals!'
+  [1m[36mInvoice Update (0.1ms)[0m  [1m[33mUPDATE "invoices" SET "subtotal_cents" = 45500, "tax_cents" = 4550, "total_cents" = 50050, "updated_at" = '2026-08-11 09:13:33.873677' WHERE "invoices"."id" = 2 /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:77:in 'Invoice#recalculate_totals!'
+  [1m[36mTRANSACTION (1.7ms)[0m  [1m[35mCOMMIT /*action='create',application='Track',controller='invoices'*/[0m
+  ↳ app/models/invoice.rb:16:in 'Invoice.build_draft!'
+Redirected to http://localhost:3000/invoices/2
+Completed 302 Found in 66ms (ActiveRecord: 6.5ms (9 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/invoices/2" for 192.168.107.1 at 2026-08-11 09:13:33 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by InvoicesController#show as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mInvoice Load (0.2ms)[0m  [1m[34mSELECT "invoices".* FROM "invoices" WHERE "invoices"."id" = 2 LIMIT 1 /*action='show',application='Track',controller='invoices'*/[0m
+  ↳ app/controllers/invoices_controller.rb:71:in 'InvoicesController#set_invoice'
+  Rendering layout layouts/application.html.erb
+  Rendering invoices/show.html.erb within layouts/application
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 LIMIT 1 /*action='show',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/show.html.erb:1
+  [1m[36mInvoiceLine Load (0.1ms)[0m  [1m[34mSELECT "invoice_lines".* FROM "invoice_lines" WHERE "invoice_lines"."invoice_id" = 2 ORDER BY "invoice_lines"."entry_date" ASC, "invoice_lines"."id" ASC /*action='show',application='Track',controller='invoices'*/[0m
+  ↳ app/views/invoices/show.html.erb:1
+  Rendered invoices/show.html.erb within layouts/application (Duration: 3.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.4ms | GC: 0.0ms)
+Completed 200 OK in 17ms (Views: 4.4ms | ActiveRecord: 0.5ms (3 queries, 0 cached) | GC: 2.3ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:13:33 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:13:52 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as */*
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/_time_entry.html.erb (Duration: 1.7ms | GC: 0.0ms)
+  Rendered dashboard/_time_entry.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 15.4ms | GC: 0.5ms)
+  Rendered layout layouts/application.html.erb (Duration: 17.4ms | GC: 0.5ms)
+Completed 200 OK in 44ms (Views: 19.7ms | ActiveRecord: 2.7ms (7 queries, 1 cached) | GC: 1.0ms)
+
+
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:14:42 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/_time_entry.html.erb (Duration: 0.9ms | GC: 0.0ms)
+  Rendered dashboard/_time_entry.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 11.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 15.0ms | GC: 0.0ms)
+Completed 200 OK in 42ms (Views: 16.5ms | ActiveRecord: 2.9ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:43 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/time_entries/1/edit" for 192.168.107.1 at 2026-08-11 09:14:44 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#edit as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 1 LIMIT 1 /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:67:in 'TimeEntriesController#set_time_entry'
+  Rendering layout layouts/application.html.erb
+  Rendering time_entries/edit.html.erb within layouts/application
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/views/time_entries/edit.html.erb:15
+  Rendered time_entries/edit.html.erb within layouts/application (Duration: 8.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 9.4ms | GC: 0.0ms)
+Completed 200 OK in 29ms (Views: 11.4ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:44 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:46 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:46 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/time_entries/1/edit" for 192.168.107.1 at 2026-08-11 09:14:47 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#edit as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 1 LIMIT 1 /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:67:in 'TimeEntriesController#set_time_entry'
+  Rendering layout layouts/application.html.erb
+  Rendering time_entries/edit.html.erb within layouts/application
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/views/time_entries/edit.html.erb:15
+  Rendered time_entries/edit.html.erb within layouts/application (Duration: 2.0ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 2.4ms | GC: 0.0ms)
+Completed 200 OK in 21ms (Views: 2.7ms | ActiveRecord: 0.5ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:47 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:49 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:49 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:14:50 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.3ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.1ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/_time_entry.html.erb (Duration: 1.0ms | GC: 0.0ms)
+  Rendered dashboard/_time_entry.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 6.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.4ms | GC: 0.0ms)
+Completed 200 OK in 25ms (Views: 7.2ms | ActiveRecord: 0.9ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:50 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/time_entries/2/edit" for 192.168.107.1 at 2026-08-11 09:14:52 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#edit as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 2 LIMIT 1 /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:67:in 'TimeEntriesController#set_time_entry'
+  Rendering layout layouts/application.html.erb
+  Rendering time_entries/edit.html.erb within layouts/application
+  [1m[36mProject Load (0.3ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/views/time_entries/edit.html.erb:15
+  Rendered time_entries/edit.html.erb within layouts/application (Duration: 2.4ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.0ms | GC: 0.0ms)
+Completed 200 OK in 19ms (Views: 3.0ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:52 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/" for 192.168.107.1 at 2026-08-11 09:14:55 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by DashboardController#index as HTML
+  [1m[36mTimeEntry Load (0.6ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."ended_at" IS NULL LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/controllers/dashboard_controller.rb:4:in 'DashboardController#index'
+  Rendering layout layouts/application.html.erb
+  Rendering dashboard/index.html.erb within layouts/application
+  [1m[36mProject Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:4
+  [1m[36mCACHE Project Exists? (0.0ms)[0m  [1m[34mSELECT 1 AS one FROM "projects" WHERE "projects"."active" = TRUE LIMIT 1[0m
+  ↳ app/views/dashboard/index.html.erb:12
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:13
+  [1m[36mTimeEntry Exists? (0.5ms)[0m  [1m[34mSELECT 1 AS one FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' LIMIT 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mTimeEntry Load (0.2ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."started_at" BETWEEN '2026-08-09 14:00:00' AND '2026-08-16 13:59:59.999999' ORDER BY "time_entries"."started_at" DESC, "time_entries"."created_at" DESC /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  [1m[36mProject Load (0.3ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."id" = 1 /*action='index',application='Track',controller='dashboard'*/[0m
+  ↳ app/views/dashboard/index.html.erb:20
+  Rendered dashboard/_time_entry.html.erb (Duration: 0.5ms | GC: 0.0ms)
+  Rendered dashboard/_time_entry.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered dashboard/index.html.erb within layouts/application (Duration: 16.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 16.9ms | GC: 0.0ms)
+Completed 200 OK in 38ms (Views: 15.8ms | ActiveRecord: 2.0ms (7 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:55 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/time_entries/2/edit" for 192.168.107.1 at 2026-08-11 09:14:57 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#edit as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mTimeEntry Load (0.6ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 2 LIMIT 1 /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:67:in 'TimeEntriesController#set_time_entry'
+  Rendering layout layouts/application.html.erb
+  Rendering time_entries/edit.html.erb within layouts/application
+  [1m[36mProject Load (0.2ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/views/time_entries/edit.html.erb:15
+  Rendered time_entries/edit.html.erb within layouts/application (Duration: 2.0ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 2.4ms | GC: 0.0ms)
+Completed 200 OK in 20ms (Views: 2.5ms | ActiveRecord: 0.7ms (2 queries, 0 cached) | GC: 0.3ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:57 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:58 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:14:58 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/time_entries/1/edit" for 192.168.107.1 at 2026-08-11 09:15:01 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+Processing by TimeEntriesController#edit as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTimeEntry Load (0.4ms)[0m  [1m[34mSELECT "time_entries".* FROM "time_entries" WHERE "time_entries"."id" = 1 LIMIT 1 /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/controllers/time_entries_controller.rb:67:in 'TimeEntriesController#set_time_entry'
+  Rendering layout layouts/application.html.erb
+  Rendering time_entries/edit.html.erb within layouts/application
+  [1m[36mProject Load (0.1ms)[0m  [1m[34mSELECT "projects".* FROM "projects" WHERE "projects"."active" = TRUE ORDER BY "projects"."name" ASC /*action='edit',application='Track',controller='time_entries'*/[0m
+  ↳ app/views/time_entries/edit.html.erb:15
+  Rendered time_entries/edit.html.erb within layouts/application (Duration: 1.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 2.1ms | GC: 0.0ms)
+Completed 200 OK in 16ms (Views: 2.1ms | ActiveRecord: 0.5ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:15:02 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:15:02 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  
+Started GET "/.well-known/appspecific/com.chrome.devtools.json" for 192.168.107.1 at 2026-08-11 09:15:02 +0000
+Cannot render console from 192.168.107.1! Allowed networks: 127.0.0.0/127.255.255.255, ::1, ::ffff:127.0.0.0/::ffff:127.255.255.255
+  
+ActionController::RoutingError (No route matches [GET] "/.well-known/appspecific/com.chrome.devtools.json"):
+  

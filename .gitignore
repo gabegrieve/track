@@ -1,0 +1,50 @@
+# Bundler, Ruby, and Rails runtime files
+/.bundle/
+/vendor/bundle/
+/.byebug_history
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+!/tmp/pids/
+!/tmp/pids/.keep
+!/tmp/storage/
+!/tmp/storage/.keep
+/storage/*
+!/storage/.keep
+/coverage/
+
+# Local databases and uploads
+/db/*.sqlite3
+/db/*.sqlite3-*
+/public/uploads/
+
+# Compiled frontend assets and package installs
+/app/assets/builds/*
+!/app/assets/builds/.keep
+/public/assets/
+/node_modules/
+/bower_components/
+/yarn-error.log
+/npm-debug.log*
+/pnpm-debug.log*
+
+# Environment files and private Rails credentials
+/.env
+/.env.*
+!/.env.example
+/config/master.key
+/config/credentials/*.key
+
+# Docker and local tooling
+/.docker/
+/docker-compose.override.yml
+/.devcontainer/
+
+# Editor and operating-system files
+/.DS_Store
+/.idea/
+.vscode/
+*.swp
+*.swo
+*~

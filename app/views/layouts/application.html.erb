@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Track" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+  </head>
+
+  <body class="min-w-80 bg-zinc-50 font-sans text-sm text-zinc-900 antialiased">
+    <header class="h-16 border-b border-zinc-200 bg-zinc-50/95">
+      <div class="mx-auto flex h-full max-w-300 items-center gap-8 px-4 sm:px-6">
+        <%= link_to "track", root_path, class: "text-xl font-semibold tracking-tight" %>
+        <nav class="flex gap-1" aria-label="Primary navigation">
+          <% nav_class = "rounded-md px-2.5 py-2 text-xs text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900" %>
+          <% active_class = "bg-zinc-200 text-zinc-900" %>
+          <%= link_to "Time", root_path, class: "#{nav_class} #{active_class if current_page?(root_path)}" %>
+          <%= link_to "Projects", projects_path, class: "#{nav_class} #{active_class if controller_name == 'projects'}" %>
+          <%= link_to "Invoices", invoices_path, class: "#{nav_class} #{active_class if controller_name == 'invoices'}" %>
+          <%= link_to "Settings", settings_path, class: "#{nav_class} #{active_class if controller_name == 'settings'}" %>
+        </nav>
+      </div>
+    </header>
+    <main class="mx-auto max-w-300 px-4 py-10 sm:px-6 sm:py-14">
+      <% flash.each do |type, message| %>
+        <div class="mb-6 rounded-md border px-3 py-2.5 <%= type == "notice" ? "border-green-200 bg-green-50 text-green-800" : "border-red-200 bg-red-50 text-red-800" %>"><%= message %></div>
+      <% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>
