@@ -19,7 +19,7 @@ gem "jbuilder"
 # Generate downloadable, server-side invoice PDFs.
 gem "prawn"
 # Tailwind CSS v4 compiler and Rails integration.
-gem "tailwindcss-rails", "~> 4.0"
+gem "tailwindcss-rails", "~> 4.7"
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"
 
